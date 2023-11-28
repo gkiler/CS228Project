@@ -1,7 +1,6 @@
 import gymnasium as gym
 import sys
 import numpy as np
-from gym.utils.play import play
 from keras.models import Sequential
 from keras.layers import Dense, Convolution2D, Flatten
 from keras.optimizers import Adam
@@ -28,21 +27,25 @@ class DQNAgent:
         model.add(Dense(actions, activation='linear'))
         model.compile(optimizer=Adam(lr=0.0001), loss='mse')
         return model
-    
+    def learn_action(self, state):
+        value = self.model.predict(state.reshape((1, self.height, self.width, self.channels)))
+        action = np.argmax(value) 
+        return action
+        
+    # end def
 
 def run(epochs=10):
     env = gym.make("ALE/SpaceInvaders-v5", render_mode="human",mode=0,difficulty=0)
     height, width, channels = env.observation_space.shape
     agent = DQNAgent(height, width, channels, env.action_space.n)
-    observation= env.reset()
+    observation, info = env.reset()
 
     for epoch in range(epochs):
         prev_reward = 0
         score = 0
         for _ in range(1000):    
-            action = agent.model.predict(np.random.random((1, height, width, channels)))  # Replace with your agent's action prediction
-            action = np.argmax(action)        
-
+       
+            action = agent.learn_action(observation)
             observation, reward, terminated, truncated, info = env.step(action)
             
             prev_reward = max(reward,prev_reward)

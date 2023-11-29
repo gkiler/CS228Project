@@ -14,7 +14,6 @@ class DQNAgent:
         self.channels = channels
         self.actions = actions
         self.model = self.build_model(height, width, channels, actions)
-        
 
     def build_model(self, height, width, channels, actions):
         model = Sequential()
@@ -27,10 +26,19 @@ class DQNAgent:
         model.add(Dense(actions, activation='linear'))
         model.compile(optimizer=Adam(lr=0.0001), loss='mse')
         return model
-    def learn_action(self, state):
+
+    def predict_action(self, state):
         value = self.model.predict(state.reshape((1, self.height, self.width, self.channels)))
         action = np.argmax(value) 
         return action
+
+    def learn_model(self, state, goal):
+        print("Fitting")
+        print(goal)
+        self.model.fit(
+            x=state.reshape((1, self.height, self.width, self.channels)),
+            y=np.array([goal])
+        )
         
     # end def
 
@@ -43,11 +51,17 @@ def run(epochs=10):
     for epoch in range(epochs):
         prev_reward = 0
         score = 0
+        old_rew = 0
         for _ in range(1000):    
        
-            action = agent.learn_action(observation)
+            action = agent.predict_action(observation)
+            # print()
             observation, reward, terminated, truncated, info = env.step(action)
             
+            if (reward - old_rew) > 0:
+                agent.learn_model(observation, action)
+                
+            old_rew = reward
             prev_reward = max(reward,prev_reward)
             score += reward
             
@@ -64,6 +78,7 @@ def run(epochs=10):
             # for val in observation:
             #     print(val,end=", ")
             # print()
+            
             if terminated or truncated:
                 observation, info = env.reset()
 

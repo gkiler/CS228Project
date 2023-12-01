@@ -17,7 +17,7 @@ class DQNAgent:
     def __init__(self, actions, states):
         self.actions = actions
         self.states = states
-        self.memory = deque(maxlen=20000)
+        self.memory = deque(maxlen=50000)
         self.epsilon = 1.0
         self.epsilon_decay = 0.995
         self.epsilon_min = 0.05
@@ -59,7 +59,7 @@ class DQNAgent:
         for state, action, reward, next_state, done in minibatch:
             target = reward
 
-            if not done: # Chat-GPT
+            if not done: 
                 target += self.gamma * np.amax(self.model.predict(next_state.reshape(1, *self.states)))
   
             target_f = self.model.predict(state.reshape(1, *self.states))
@@ -90,7 +90,7 @@ def run(epochs=10, batch_size=32):
     for epoch in range(epochs):
         score = 0
         #observation = preprocess_frame(observation).reshape(88,80)
-        for it in range(1000):    
+        for it in range(2000):    
             
             action = agent.learn_action(observation.reshape(1, *env.observation_space.shape))
             next_observation, reward, terminated, _, _ = env.step(action)
@@ -126,4 +126,4 @@ def run(epochs=10, batch_size=32):
     env.close()
 
 if __name__=='__main__':
-    run(epochs=10, batch_size=32)
+    run(epochs=20, batch_size=32)
